@@ -13,7 +13,7 @@ main{padding:22px 0 40px}.card{background:white;border:1px solid var(--line);bor
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{margin-bottom:14px}
 label{display:block;font-weight:700;margin-bottom:6px;font-size:14px}
 input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font:inherit;background:white;color:#182536}
-input[readonly]{background:#f1f5f9;color:#475569}textarea{min-height:86px;resize:vertical}
+textarea{min-height:86px;resize:vertical}
 button{border:0;border-radius:10px;background:var(--blue);color:white;font-weight:700;padding:13px 20px;font-size:15px;cursor:pointer}
 button:disabled{opacity:.55;cursor:wait}.hint{color:var(--muted);font-size:13px}.status{padding:11px 13px;border-radius:9px;margin-top:12px;display:none}
 .status.ok{display:block;background:#e8f7ee;color:#166534}.status.err{display:block;background:#fff0f0;color:#991b1b}
@@ -31,10 +31,10 @@ button:disabled{opacity:.55;cursor:wait}.hint{color:var(--muted);font-size:13px}
       <select id="teacher" name="teacher" required><option value="">Memuat daftar guru...</option></select>
       <div class="hint">Nama diambil dari sheet Daftar Guru.</div></div>
     <div class="field"><label for="date">Tanggal Pembelajaran</label><input id="date" name="date" type="date" required></div>
-    <div class="field"><label for="academicYear">Tahun Ajaran</label><input id="academicYear" name="academicYear" readonly></div>
-    <div class="field"><label for="semester">Semester</label><input id="semester" name="semester" readonly></div>
-    <div class="field"><label for="day">Hari</label><input id="day" name="day" readonly></div>
-    <div class="field"><label for="time">Waktu Pengisian</label><input id="time" name="time" readonly></div>
+    <div class="field"><label for="academicYear">Tahun Ajaran <span class="req">*</span></label><input id="academicYear" name="academicYear" type="text" required placeholder="Contoh: 2026/2027"></div>
+    <div class="field"><label for="semester">Semester <span class="req">*</span></label><select id="semester" name="semester" required><option value="">Pilih semester</option><option value="Ganjil">Ganjil</option><option value="Genap">Genap</option></select></div>
+    <div class="field"><label for="day">Hari <span class="req">*</span></label><select id="day" name="day" required><option value="">Pilih hari</option><option>Senin</option><option>Selasa</option><option>Rabu</option><option>Kamis</option><option>Jumat</option><option>Sabtu</option><option>Minggu</option></select></div>
+    <div class="field"><label for="time">Waktu Pembelajaran <span class="req">*</span></label><input id="time" name="time" type="time" required></div>
   </div>
   <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
   <h2>Pelaksanaan Pembelajaran</h2>
@@ -59,15 +59,6 @@ button:disabled{opacity:.55;cursor:wait}.hint{color:var(--muted);font-size:13px}
 /* GANTI URL INI dengan URL Web App Apps Script setelah deployment */
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAmAgPxRga1bn4Sb4Jj31Wt0wgFkUxH8nuGYITt9Z2euZq807bdW9XXyjEWLUcjU1h/exec";
 const $ = id => document.getElementById(id);
-const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-function setAutoFields(){
-  const d = new Date(($("date").value || new Date().toISOString().slice(0,10))+"T12:00:00");
-  const y=d.getFullYear(), m=d.getMonth()+1;
-  $("academicYear").value = m>=7 ? `${y}/${y+1}` : `${y-1}/${y}`;
-  $("semester").value = (m>=7 && m<=12) || m===1 ? "Ganjil" : "Genap";
-  $("day").value=hari[d.getDay()];
-  $("time").value=new Date().toLocaleString("id-ID");
-}
 function showStatus(msg,kind){$("status").textContent=msg;$("status").className="status "+kind}
 function jsonp(params){
   return new Promise((resolve,reject)=>{
@@ -91,8 +82,7 @@ async function loadTeachers(){
   }catch(e){$("teacher").innerHTML='<option value="">Gagal memuat daftar guru</option>';showStatus(e.message,"err")}
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-$("date").value=new Date().toISOString().slice(0,10);setAutoFields();$("date").addEventListener("change",setAutoFields);
-setInterval(()=>{$("time").value=new Date().toLocaleString("id-ID")},30000);
+$("date").value=new Date().toISOString().slice(0,10);
 loadTeachers();
 $("reportForm").addEventListener("submit",async e=>{
   e.preventDefault();
@@ -106,7 +96,7 @@ $("reportForm").addEventListener("submit",async e=>{
     const r=await jsonp(data);
     if(!r.ok)throw new Error(r.message||"Laporan gagal disimpan.");
     showStatus("Laporan berhasil dikirim dan tercatat di database. Terima kasih.","ok");
-    e.target.reset();$("date").value=new Date().toISOString().slice(0,10);setAutoFields();loadTeachers();
+    e.target.reset();$("date").value=new Date().toISOString().slice(0,10);loadTeachers();
   }catch(err){showStatus(err.message,"err")}
   finally{$("submitBtn").disabled=false;$("submitBtn").textContent="Kirim Laporan"}
 });
