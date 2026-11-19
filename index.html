@@ -42,14 +42,13 @@ button:disabled{opacity:.55;cursor:wait}.hint{color:var(--muted);font-size:13px}
     <div class="field"><label for="subject">Mata Pelajaran <span class="req">*</span></label><input id="subject" name="subject" required placeholder="Contoh: Informatika"></div>
     <div class="field"><label for="className">Kelas <span class="req">*</span></label><input id="className" name="className" required placeholder="Contoh: X TKJ 1"></div>
     <div class="field"><label for="topic">Materi / Topik <span class="req">*</span></label><input id="topic" name="topic" required placeholder="Materi yang diajarkan"></div>
-    <div class="field"><label for="method">Metode / Media</label><select id="method" name="method"><option value="">Pilih metode</option><option>Google Classroom</option><option>Google Meet</option><option>WhatsApp</option><option>Video pembelajaran</option><option>Modul / tugas mandiri</option><option>Lainnya</option></select></div>
+    <div class="field"><label for="method">Metode / Media</label><select id="method" name="method" required><option value="">Pilih metode</option><option value="Video pembelajaran">Video pembelajaran</option><option value="Tugas">Tugas</option><option value="Materi">Materi</option></select></div>
     <div class="field"><label for="totalStudents">Jumlah Siswa</label><input id="totalStudents" name="totalStudents" type="number" min="0" placeholder="0"></div>
     <div class="field"><label for="presentStudents">Siswa yang Berpartisipasi</label><input id="presentStudents" name="presentStudents" type="number" min="0" placeholder="0"></div>
   </div>
   <div class="field"><label for="activity">Uraian Kegiatan Pembelajaran <span class="req">*</span></label><textarea id="activity" name="activity" required placeholder="Jelaskan kegiatan pembelajaran yang dilaksanakan..."></textarea></div>
   <div class="field"><label for="obstacle">Kendala yang Dihadapi</label><textarea id="obstacle" name="obstacle" placeholder="Tuliskan kendala, jika ada."></textarea></div>
   <div class="field"><label for="followUp">Tindak Lanjut</label><textarea id="followUp" name="followUp" placeholder="Rencana tindak lanjut atau perbaikan."></textarea></div>
-  <div class="field"><label for="evidence">Tautan Bukti / Materi (opsional)</label><input id="evidence" name="evidence" type="url" placeholder="https://..."></div>
   <button id="submitBtn" type="submit">Kirim Laporan</button>
   <div id="status" class="status" role="status"></div>
 </form>
