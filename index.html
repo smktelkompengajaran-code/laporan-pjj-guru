@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laporan Pembelajaran Jarak Jauh</title>
+<style>
+:root{--navy:#12345a;--blue:#1769aa;--bg:#f3f6fa;--line:#dce4ee;--muted:#64748b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px/1.5 Arial,sans-serif;color:#182536}
+header{background:linear-gradient(120deg,#12345a,#1769aa);color:white;padding:26px 18px}
+.wrap{max-width:850px;margin:auto;padding:0 14px}
+h1{font-size:24px;margin:0 0 6px}header p{margin:0;opacity:.9}
+main{padding:22px 0 40px}.card{background:white;border:1px solid var(--line);border-radius:15px;padding:22px;margin-bottom:16px;box-shadow:0 5px 18px #18385b0a}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{margin-bottom:14px}
+label{display:block;font-weight:700;margin-bottom:6px;font-size:14px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font:inherit;background:white;color:#182536}
+input[readonly]{background:#f1f5f9;color:#475569}textarea{min-height:86px;resize:vertical}
+button{border:0;border-radius:10px;background:var(--blue);color:white;font-weight:700;padding:13px 20px;font-size:15px;cursor:pointer}
+button:disabled{opacity:.55;cursor:wait}.hint{color:var(--muted);font-size:13px}.status{padding:11px 13px;border-radius:9px;margin-top:12px;display:none}
+.status.ok{display:block;background:#e8f7ee;color:#166534}.status.err{display:block;background:#fff0f0;color:#991b1b}
+.req{color:#b42318}.footer{text-align:center;color:var(--muted);font-size:12px;padding:14px}
+@media(max-width:620px){.grid{grid-template-columns:1fr}.card{padding:17px}h1{font-size:21px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>Laporan Pembelajaran Jarak Jauh</h1><p>Formulir pelaporan kegiatan pembelajaran guru</p></div></header>
+<main class="wrap">
+<form id="reportForm" class="card">
+  <h2 style="margin-top:0">Identitas Laporan</h2>
+  <div class="grid">
+    <div class="field"><label for="teacher">Nama Guru <span class="req">*</span></label>
+      <select id="teacher" name="teacher" required><option value="">Memuat daftar guru...</option></select>
+      <div class="hint">Nama diambil dari sheet Daftar Guru.</div></div>
+    <div class="field"><label for="date">Tanggal Pembelajaran</label><input id="date" name="date" type="date" required></div>
+    <div class="field"><label for="academicYear">Tahun Ajaran</label><input id="academicYear" name="academicYear" readonly></div>
+    <div class="field"><label for="semester">Semester</label><input id="semester" name="semester" readonly></div>
+    <div class="field"><label for="day">Hari</label><input id="day" name="day" readonly></div>
+    <div class="field"><label for="time">Waktu Pengisian</label><input id="time" name="time" readonly></div>
+  </div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+  <h2>Pelaksanaan Pembelajaran</h2>
+  <div class="grid">
+    <div class="field"><label for="subject">Mata Pelajaran <span class="req">*</span></label><input id="subject" name="subject" required placeholder="Contoh: Informatika"></div>
+    <div class="field"><label for="className">Kelas <span class="req">*</span></label><input id="className" name="className" required placeholder="Contoh: X TKJ 1"></div>
+    <div class="field"><label for="topic">Materi / Topik <span class="req">*</span></label><input id="topic" name="topic" required placeholder="Materi yang diajarkan"></div>
+    <div class="field"><label for="method">Metode / Media</label><select id="method" name="method"><option value="">Pilih metode</option><option>Google Classroom</option><option>Google Meet</option><option>WhatsApp</option><option>Video pembelajaran</option><option>Modul / tugas mandiri</option><option>Lainnya</option></select></div>
+    <div class="field"><label for="totalStudents">Jumlah Siswa</label><input id="totalStudents" name="totalStudents" type="number" min="0" placeholder="0"></div>
+    <div class="field"><label for="presentStudents">Siswa yang Berpartisipasi</label><input id="presentStudents" name="presentStudents" type="number" min="0" placeholder="0"></div>
+  </div>
+  <div class="field"><label for="activity">Uraian Kegiatan Pembelajaran <span class="req">*</span></label><textarea id="activity" name="activity" required placeholder="Jelaskan kegiatan pembelajaran yang dilaksanakan..."></textarea></div>
+  <div class="field"><label for="obstacle">Kendala yang Dihadapi</label><textarea id="obstacle" name="obstacle" placeholder="Tuliskan kendala, jika ada."></textarea></div>
+  <div class="field"><label for="followUp">Tindak Lanjut</label><textarea id="followUp" name="followUp" placeholder="Rencana tindak lanjut atau perbaikan."></textarea></div>
+  <div class="field"><label for="evidence">Tautan Bukti / Materi (opsional)</label><input id="evidence" name="evidence" type="url" placeholder="https://..."></div>
+  <button id="submitBtn" type="submit">Kirim Laporan</button>
+  <div id="status" class="status" role="status"></div>
+</form>
+<div class="footer">Sistem Laporan PJJ Guru · Data tersimpan pada Google Spreadsheet sekolah</div>
+</main>
+<script>
+/* GANTI URL INI dengan URL Web App Apps Script setelah deployment */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAmAgPxRga1bn4Sb4Jj31Wt0wgFkUxH8nuGYITt9Z2euZq807bdW9XXyjEWLUcjU1h/exec";
+const $ = id => document.getElementById(id);
+const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+function setAutoFields(){
+  const d = new Date(($("date").value || new Date().toISOString().slice(0,10))+"T12:00:00");
+  const y=d.getFullYear(), m=d.getMonth()+1;
+  $("academicYear").value = m>=7 ? `${y}/${y+1}` : `${y-1}/${y}`;
+  $("semester").value = (m>=7 && m<=12) || m===1 ? "Ganjil" : "Genap";
+  $("day").value=hari[d.getDay()];
+  $("time").value=new Date().toLocaleString("id-ID");
+}
+function showStatus(msg,kind){$("status").textContent=msg;$("status").className="status "+kind}
+function jsonp(params){
+  return new Promise((resolve,reject)=>{
+    const cb="pjj_cb_"+Date.now()+"_"+Math.floor(Math.random()*10000);
+    const s=document.createElement("script");
+    const timer=setTimeout(()=>{cleanup();reject(new Error("Server tidak merespons. Periksa URL Apps Script."));},15000);
+    function cleanup(){clearTimeout(timer);delete window[cb];s.remove()}
+    window[cb]=data=>{cleanup();resolve(data)};
+    params.callback=cb;
+    s.src=SCRIPT_URL+"?"+new URLSearchParams(params).toString();
+    s.onerror=()=>{cleanup();reject(new Error("Gagal terhubung ke server."))};
+    document.body.appendChild(s);
+  });
+}
+async function loadTeachers(){
+  if(SCRIPT_URL.startsWith("TEMPEL_")){$("teacher").innerHTML='<option value="">URL Apps Script belum diatur</option>';return}
+  try{
+    const r=await jsonp({action:"teachers"});
+    if(!r.ok) throw new Error(r.message||"Daftar guru tidak dapat dimuat");
+    $("teacher").innerHTML='<option value="">Pilih nama guru</option>'+r.teachers.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
+  }catch(e){$("teacher").innerHTML='<option value="">Gagal memuat daftar guru</option>';showStatus(e.message,"err")}
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("date").value=new Date().toISOString().slice(0,10);setAutoFields();$("date").addEventListener("change",setAutoFields);
+setInterval(()=>{$("time").value=new Date().toLocaleString("id-ID")},30000);
+loadTeachers();
+$("reportForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(!e.target.reportValidity())return;
+  const total=Number($("totalStudents").value||0), hadir=Number($("presentStudents").value||0);
+  if(hadir>total && total>0){showStatus("Jumlah siswa yang berpartisipasi tidak boleh melebihi jumlah siswa.","err");return}
+  $("submitBtn").disabled=true;$("submitBtn").textContent="Mengirim...";
+  try{
+    const data=Object.fromEntries(new FormData(e.target).entries());
+    data.action="submit";
+    const r=await jsonp(data);
+    if(!r.ok)throw new Error(r.message||"Laporan gagal disimpan.");
+    showStatus("Laporan berhasil dikirim dan tercatat di database. Terima kasih.","ok");
+    e.target.reset();$("date").value=new Date().toISOString().slice(0,10);setAutoFields();loadTeachers();
+  }catch(err){showStatus(err.message,"err")}
+  finally{$("submitBtn").disabled=false;$("submitBtn").textContent="Kirim Laporan"}
+});
+</script>
+</body></html>
